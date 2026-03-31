@@ -429,33 +429,200 @@ DOMAIN_PHRASES = [
 
 
 def where_to_search(text):
-    """Определяет где искать на основе контекста."""
+    """Ультимативный детектор: ГДЕ искать + конкретные поисковые запросы."""
     sources = {"GitHub"}
+    queries = []  # конкретные поисковые запросы
 
-    checks = [
-        (r'\b(npm|node|js|ts|react|vue|svelte|next|express|typescript|javascript|bun|deno)\b', "npm"),
-        (r'\b(pip|python|django|flask|fastapi|pandas|pytorch|poetry|uv)\b', "pip/PyPI"),
-        (r'\b(cargo|rust|actix|axum|tokio)\b', "crates.io"),
-        (r'\b(nuget|c#|csharp|dotnet|\.net|maui|avalonia)\b', "NuGet"),
-        (r'\b(docker|k8s|kubernetes|podman)\b', "Docker Hub"),
-        (r'\b(gem|ruby|rails|sinatra)\b', "RubyGems"),
-        (r'\b(composer|php|laravel|symfony)\b', "Packagist"),
-        (r'\b(go|golang|gin|echo|fiber)\b', "pkg.go.dev"),
-        (r'\b(эффект|анимаци|canvas|css\s+effect|animation|transition|parallax)\b', "CodePen"),
-        (r'\b(shader|hlsl|glsl|шейдер|webgl)\b', "ShaderToy"),
-        (r'\b(ci|cd|action|workflow|pipeline|github\s+action)\b', "GitHub Actions"),
-        (r'\b(claude|claude.code|mcp|plugin|расширение.?claude)\b', "claude-code-plugins"),
-        (r'\b(template|шаблон|boilerplate|starter|scaffold)\b', "GitHub templates"),
-        (r'\b(wordpress|cms|strapi|sanity|contentful)\b', "WordPress/CMS plugins"),
-        (r'\b(chrome|firefox|browser\s+extension|расширение\s+браузер)\b', "Chrome Web Store"),
-        (r'\b(vscode|vs\s*code|jetbrains|ide\s+extension)\b', "VS Code Marketplace"),
+    # ── Package registries by language ─────────────────────────────────
+    REGISTRY_CHECKS = [
+        # JavaScript / TypeScript ecosystem
+        (r'\b(npm|node|js|ts|react|vue|svelte|next|express|typescript|javascript|bun|deno|angular|astro|remix|solid|qwik|nuxt|gatsby|vite|webpack|rollup|esbuild)\b',
+         "npmjs.com", "npm search '[task]'"),
+        # Python ecosystem
+        (r'\b(pip|python|django|flask|fastapi|pandas|pytorch|poetry|uv|celery|scrapy|sqlalchemy|pydantic|httpx|aiohttp|beautifulsoup|lxml)\b',
+         "PyPI (pypi.org)", "pip search / pypi.org/search/?q=[task]"),
+        # Rust
+        (r'\b(cargo|rust|actix|axum|tokio|serde|warp|hyper)\b',
+         "crates.io", "crates.io/search?q=[task]"),
+        # C# / .NET
+        (r'\b(nuget|c#|csharp|dotnet|\.net|maui|avalonia|wpf|winforms|blazor|asp\.net)\b',
+         "NuGet (nuget.org)", "nuget.org/packages?q=[task]"),
+        # Go
+        (r'\b(go|golang|gin|echo|fiber|gorilla|chi|cobra)\b',
+         "pkg.go.dev", "pkg.go.dev/search?q=[task]"),
+        # Ruby
+        (r'\b(gem|ruby|rails|sinatra|sidekiq|rspec)\b',
+         "RubyGems", "rubygems.org/search?query=[task]"),
+        # PHP
+        (r'\b(composer|php|laravel|symfony|wordpress|drupal|yii)\b',
+         "Packagist", "packagist.org/search/?q=[task]"),
+        # Java / Kotlin
+        (r'\b(maven|gradle|java|kotlin|spring|quarkus|micronaut|ktor)\b',
+         "Maven Central", "search.maven.org/search?q=[task]"),
+        # Swift
+        (r'\b(swift|swiftui|cocoapods|spm|vapor|alamofire)\b',
+         "Swift Package Index", "swiftpackageindex.com/search?q=[task]"),
+        # Dart / Flutter
+        (r'\b(dart|flutter|pub\.dev)\b',
+         "pub.dev", "pub.dev/packages?q=[task]"),
+        # Elixir
+        (r'\b(elixir|phoenix|hex\.pm|ecto)\b',
+         "hex.pm", "hex.pm/packages?search=[task]"),
     ]
 
-    for pattern, source in checks:
+    # ── Specialized platforms ──────────────────────────────────────────
+    PLATFORM_CHECKS = [
+        # Docker / containers
+        (r'\b(docker|k8s|kubernetes|podman|container|helm|compose)\b',
+         "Docker Hub", "hub.docker.com/search?q=[task]"),
+        # CI/CD
+        (r'\b(ci|cd|action|workflow|pipeline|github\s+action|gitlab\s+ci|jenkins)\b',
+         "GitHub Actions Marketplace", "github.com/marketplace?type=actions&query=[task]"),
+        # Claude Code
+        (r'\b(claude|claude.?code|mcp|claude.?plugin|anthropic)\b',
+         "claude-code-plugins marketplace", "search claude-code-plugins for '[task]'"),
+        # VS Code
+        (r'\b(vscode|vs\s*code|visual\s*studio\s*code)\b',
+         "VS Code Marketplace", "marketplace.visualstudio.com/search?term=[task]"),
+        # JetBrains
+        (r'\b(jetbrains|intellij|pycharm|webstorm|goland|rider)\b',
+         "JetBrains Marketplace", "plugins.jetbrains.com/search?search=[task]"),
+        # Browser extensions
+        (r'\b(chrome|firefox|browser\s+extension|расширение\s+браузер|addon)\b',
+         "Chrome Web Store / Firefox Add-ons", None),
+        # WordPress
+        (r'\b(wordpress|wp\s+plugin|wp\s+theme)\b',
+         "WordPress Plugin Directory", "wordpress.org/plugins/search/[task]"),
+        # Terraform
+        (r'\b(terraform|tf\s+module|infrastructure.?as.?code)\b',
+         "Terraform Registry", "registry.terraform.io/search/modules?q=[task]"),
+        # Ansible
+        (r'\b(ansible|playbook|galaxy)\b',
+         "Ansible Galaxy", "galaxy.ansible.com/search?keywords=[task]"),
+    ]
+
+    # ── Creative / visual ──────────────────────────────────────────────
+    CREATIVE_CHECKS = [
+        (r'\b(эффект|анимаци|canvas|css\s+effect|animation|transition|parallax|hover\s+effect|scroll\s+effect|typing\s+effect|particle|ripple|glow|gradient|морфинг|морф)\b',
+         "CodePen", "codepen.io/search/pens?q=[task]"),
+        (r'\b(shader|hlsl|glsl|шейдер|webgl|raymarching|sdf|noise)\b',
+         "ShaderToy", "shadertoy.com/results?query=[task]"),
+        (r'\b(three\.?js|3d|webgl|babylon|aframe)\b',
+         "three.js examples + GitHub", "threejs.org/examples/ + github search"),
+        (r'\b(d3|chart|graph|visualization|визуализаци|диаграмм|график)\b',
+         "Observable / D3 Gallery", "observablehq.com/search?query=[task]"),
+        (r'\b(icon|иконк|svg|sprite|emoji|pictogram)\b',
+         "Iconify / Lucide / Heroicons", "icones.js.org/search?q=[task]"),
+        (r'\b(font|шрифт|typography|типографик)\b',
+         "Google Fonts / Fontsource", "fonts.google.com / fontsource.org"),
+        (r'\b(color|цвет|палитр|gradient|градиент|oklch|hsl)\b',
+         "Coolors / Color Hunt / OKLCH", "coolors.co / colorhunt.co"),
+        (r'\b(illustration|иллюстраци|vector|вектор|svg\s+art)\b',
+         "unDraw / Storyset / Humaaans", "undraw.co/search"),
+        (r'\b(звук|sound|audio|sfx|music|notification\s+sound)\b',
+         "Freesound / Mixkit", "freesound.org/search/?q=[task]"),
+        (r'\b(lottie|motion|micro.?interaction|micro.?animation)\b',
+         "LottieFiles", "lottiefiles.com/search?q=[task]"),
+    ]
+
+    # ── Templates / starters ───────────────────────────────────────────
+    TEMPLATE_CHECKS = [
+        (r'\b(template|шаблон|boilerplate|starter|scaffold|skeleton|каркас|archetype)\b',
+         "GitHub Templates + Awesome lists", "github.com/topics/[task]-template"),
+        (r'\b(landing|лендинг|homepage|промо.?страниц)\b',
+         "HTML5 UP / Tailwind Templates", "html5up.net + tailwindui.com"),
+        (r'\b(admin|dashboard|дашборд|панель\s+управлени|backoffice)\b',
+         "AdminLTE / Tremor / Refine", "github.com/topics/admin-dashboard"),
+        (r'\b(email\s+template|письм[оа]\s+шаблон|newsletter)\b',
+         "MJML / React Email / Maizzle", "github.com/topics/email-template"),
+    ]
+
+    # ── Knowledge / docs / best practices ──────────────────────────────
+    KNOWLEDGE_CHECKS = [
+        (r'\b(best\s+practice|лучш\w+\s+практик|паттерн|pattern|архитектур|design\s+pattern)\b',
+         "Awesome lists + Refactoring.Guru", "github.com/topics/awesome + refactoring.guru"),
+        (r'\b(туториал|tutorial|guide|гайд|how.?to|руководств)\b',
+         "Dev.to / FreeCodeCamp / MDN", "dev.to/search?q=[task]"),
+        (r'\b(cheatsheet|шпаргалк|справочник|reference)\b',
+         "devhints.io / tldr-pages", "devhints.io/[task]"),
+        (r'\b(курс|course|learn|обучени|изучить)\b',
+         "FreeCodeCamp / Exercism / Egghead", "freecodecamp.org + exercism.org"),
+    ]
+
+    # ── API / integration ──────────────────────────────────────────────
+    API_CHECKS = [
+        (r'\b(telegram|телеграм|тг\s*бот|tg\s*bot)\b',
+         "Telegram Bot API examples + PTB", "github.com/python-telegram-bot/python-telegram-bot/tree/master/examples"),
+        (r'\b(discord)\b',
+         "discord.js guide + discord.py", "discordjs.guide + discordpy.readthedocs.io"),
+        (r'\b(slack)\b',
+         "Slack Bolt SDK", "github.com/slackapi/bolt-python"),
+        (r'\b(stripe|платёж|оплат|payment)\b',
+         "Stripe docs + examples", "stripe.com/docs + github.com/stripe-samples"),
+        (r'\b(firebase|supabase|pocketbase|appwrite)\b',
+         "Official docs + community tools", "[platform].com/docs + awesome-[platform]"),
+        (r'\b(openai|gpt|llm|langchain|llamaindex|anthropic)\b',
+         "LangChain Hub + Awesome LLM", "smith.langchain.com/hub + github.com/topics/awesome-llm"),
+        (r'\b(oauth|auth|sso|jwt|авторизаци|аутентификаци)\b',
+         "Auth.js / Lucia / Passport.js / Official SDK", "authjs.dev + lucia-auth.com"),
+        (r'\b(s3|cloudflare|aws|gcp|azure)\b',
+         "Official SDK + Terraform modules", "registry.terraform.io + official docs"),
+        (r'\b(webhook|вебхук)\b',
+         "Svix / Hookdeck / ngrok", "github.com/topics/webhook"),
+        (r'\b(email|smtp|почт[аеу]|рассылк)\b',
+         "Nodemailer / Resend / React Email", "github.com/topics/email + resend.com"),
+        (r'\b(sms|push\s*notification|пуш)\b',
+         "Twilio / OneSignal / Firebase FCM", "twilio.com/docs + onesignal.com"),
+        (r'\b(pdf|генераци\w+\s+pdf|pdf\s+generat)\b',
+         "Puppeteer PDF / WeasyPrint / jsPDF", "github.com/topics/pdf-generation"),
+        (r'\b(excel|xlsx|csv|spreadsheet|таблиц\w+\s+файл)\b',
+         "SheetJS / OpenPyXL / Pandas", "github.com/topics/excel"),
+        (r'\b(qr|qr.?code|штрих.?код|barcode)\b',
+         "QRCode.js / python-qrcode / zxing", "github.com/topics/qrcode"),
+        (r'\b(map|карт[ау]|geolocation|геолокаци|leaflet|mapbox)\b',
+         "Leaflet / MapLibre / Deck.gl", "leafletjs.com + github.com/topics/maps"),
+        (r'\b(calendar|календар|date.?picker|datepicker)\b',
+         "FullCalendar / react-datepicker", "github.com/topics/calendar"),
+        (r'\b(markdown|md\s+editor|wysiwyg|rich.?text|редактор\s+текст)\b',
+         "TipTap / Lexical / Milkdown / Toast UI", "github.com/topics/rich-text-editor"),
+        (r'\b(file\s+upload|загрузк\w+\s+файл|drag.?drop\s+upload|uploader)\b',
+         "Filepond / Uppy / Dropzone", "github.com/topics/file-upload"),
+        (r'\b(image\s+crop|обрезк\w+\s+фото|resize|ресайз|compress\w*\s+image)\b',
+         "Sharp / Cropper.js / Squoosh", "github.com/topics/image-processing"),
+        (r'\b(video\s+player|видео.?плеер|streaming|стриминг)\b',
+         "Video.js / Plyr / hls.js", "github.com/topics/video-player"),
+        (r'\b(chat|чат|real.?time\s+messag|мессенджер)\b',
+         "Stream Chat / Socket.io / Ably", "getstream.io + socket.io"),
+        (r'\b(search|поиск|full.?text|полнотекстов|autocomplete|автозаполнени)\b',
+         "MeiliSearch / Typesense / Fuse.js / Algolia", "github.com/topics/search-engine"),
+        (r'\b(i18n|l10n|локализаци|перевод|internationalization|translate)\b',
+         "i18next / FormatJS / Paraglide", "github.com/topics/i18n"),
+        (r'\b(form\s+valid|валидаци\w+\s+форм|zod|yup|ajv|joi)\b',
+         "Zod / Yup / Valibot / AJV", "github.com/topics/validation"),
+        (r'\b(state\s+manag|стейт|zustand|redux|pinia|jotai|recoil)\b',
+         "Zustand / Pinia / Jotai / XState", "github.com/topics/state-management"),
+        (r'\b(toast|notification\s+ui|snackbar|уведомлени\w+\s+ui)\b',
+         "Sonner / React Hot Toast / Notistack", "github.com/topics/toast"),
+        (r'\b(table|data.?grid|data.?table|таблиц\w+\s+компонент)\b',
+         "TanStack Table / AG Grid / Tabulator", "github.com/topics/data-table"),
+        (r'\b(carousel|карусел|swiper|slider|слайдер)\b',
+         "Swiper / Embla / Keen-Slider / Splide", "github.com/topics/carousel"),
+        (r'\b(modal|модальн|dialog|диалог\w+\s+окн)\b',
+         "Headless UI / Radix Dialog / SweetAlert2", "github.com/topics/modal"),
+    ]
+
+    all_checks = (
+        REGISTRY_CHECKS + PLATFORM_CHECKS + CREATIVE_CHECKS
+        + TEMPLATE_CHECKS + KNOWLEDGE_CHECKS + API_CHECKS
+    )
+
+    for pattern, source, query in all_checks:
         if re.search(pattern, text, re.I):
             sources.add(source)
+            if query:
+                queries.append(query)
 
-    return " · ".join(sorted(sources))
+    return " · ".join(sorted(sources)), queries
 
 
 def main():
@@ -511,22 +678,49 @@ def main():
         return
 
     # ── Output ─────────────────────────────────────────────────────────
-    where = where_to_search(prompt_lower)
+    where_sources, where_queries = where_to_search(prompt_lower)
     reason_str = "+".join(reasons)
 
     print(
-        f"\n\U0001f50d [REUSE_FIRST] \u0418\u0449\u0438 \u0433\u043e\u0442\u043e\u0432\u043e\u0435 \u2192 {where}\n",
+        f"\n\U0001f50d [REUSE_FIRST] \u0418\u0449\u0438 \u0433\u043e\u0442\u043e\u0432\u043e\u0435 \u2192 {where_sources}\n",
         file=sys.stderr,
     )
 
+    # Build deep search queries block
+    q_block = ""
+    if where_queries:
+        q_lines = " | ".join(where_queries[:6])
+        q_block = f" Конкретные источники: {q_lines}."
+
     hint = (
         f"[REUSE_FIRST] ({reason_str}) "
-        f"ОБЯЗАТЕЛЬНО перед написанием кода — поищи готовые реализации! "
-        f"1) WebSearch '[суть задачи] github' + '{where}'. "
-        f"2) Найдено с 50+ stars и активное? \u2192 ИСПОЛЬЗОВАТЬ, не писать своё. "
-        f"3) Частичное покрытие? \u2192 Взять как базу, адаптировать. "
-        f"4) Ничего нет \u2192 отчитаться: '\U0001f50d Поиск: [что искал] \u2192 \u274c не найдено' \u2192 писать с нуля. "
-        f"ГОТОВОЕ РЕШЕНИЕ = УЛЬТИМАТИВНЫЙ ПРИОРИТЕТ. Не начинай писать код пока не поискал."
+        f"СТОП! Перед написанием ЛЮБОГО кода — ОБЯЗАТЕЛЬНЫЙ 3-этапный поиск готовых реализаций.\n"
+        f"\n"
+        f"## ЭТАП 1 — Прямой поиск готового (БЛОКЕР)\n"
+        f"Выполни 2-3 WebSearch запроса:\n"
+        f"  - \"[суть задачи] github stars:>50\"\n"
+        f"  - \"[суть задачи] npm package\" / \"pip install [задача]\"\n"
+        f"  - \"awesome [тема]\" / \"[задача] library 2025\"\n"
+        f"Где искать: {where_sources}.{q_block}\n"
+        f"\n"
+        f"## ЭТАП 2 — Оценка найденного\n"
+        f"  \u2705 100+ stars, активный, MIT/Apache \u2192 ИСПОЛЬЗОВАТЬ. Не писать своё. [УЛЬТИМАТИВНЫЙ ПРИОРИТЕТ]\n"
+        f"  \u26a0\ufe0f 20-100 stars, покрывает 50%+ \u2192 Взять как базу, адаптировать.\n"
+        f"  \u274c Ничего подходящего \u2192 перейти к Этапу 3.\n"
+        f"\n"
+        f"## ЭТАП 3 — Референсы и best practices (если готового нет)\n"
+        f"  - \"[задача] best practices 2025\"\n"
+        f"  - \"[задача] tutorial\" / \"how to [задача]\"\n"
+        f"  - \"[задача] example code\" / \"[задача] implementation guide\"\n"
+        f"  Писать на основе найденных референсов, НЕ из памяти.\n"
+        f"\n"
+        f"## ОТЧЁТ (обязательно в начале ответа)\n"
+        f"\U0001f50d Поиск: [что искал]\n"
+        f"  \u251c\u2500 \u2705 Найдено: [название] (\u2b50 N, ссылка) \u2192 использую\n"
+        f"  \u251c\u2500 \u26a0\ufe0f Частичное: [название] \u2192 беру как базу\n"
+        f"  \u2514\u2500 \u274c Не найдено \u2192 пишу с нуля, референсы: [ссылки]\n"
+        f"\n"
+        f"ГОТОВОЕ РЕШЕНИЕ = УЛЬТИМАТИВНЫЙ ПРИОРИТЕТ. НЕ НАЧИНАЙ писать код пока не выполнил все 3 этапа."
     )
     print(json.dumps({"injectedSystemPrompt": hint}, ensure_ascii=False))
 
