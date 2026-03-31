@@ -4,71 +4,39 @@ description: Search for existing solutions before writing code — ultimate prio
 user-invocable: false
 ---
 
-# Reuse First — search for existing solutions first
+# Reuse First
 
-## When loaded
+Automated hook that detects when you're about to write something that probably already exists.
 
-Automatically via `hook.py` (UserPromptSubmit).
-Injects `[REUSE_FIRST]` + context-aware search hints when task matches a pattern.
+## How it works
 
-## What it detects
-
-30+ trigger patterns across 17 categories:
-- New implementations (create, build, implement, develop)
-- Utilities, libraries, integrations, templates
-- Bots, services, CLI apps, effects/animations
-- Data processing, testing, monitoring, auth
-- Database tools, deployment, UI components
-- Bilingual: English + Russian triggers
-
-14 skip patterns to avoid false positives:
-- Fixes, refactoring, style edits, docs, read-only tasks
-- Short answers, slash commands, process commands
-
-## Algorithm
+UserPromptSubmit hook analyzes every prompt and triggers when it detects:
 
 ```
-1. WebSearch("[task] github") or WebSearch("[task] npm/pip/package")
-       │
-       ├─ Found ready-made (100+ stars, active, license ok)
-       │   └─ USE IT. Install/connect. Don't write your own.
-       │
-       ├─ Found partial (20+ stars, 50%+ coverage)
-       │   └─ Use as base, adapt for the task.
-       │
-       └─ Nothing ready-made found
-           │
-           ▼
-2. WebSearch("[task] best practices / tutorial / how to")
-       │
-       ├─ Found advice/references
-       │   └─ Write based on them, link in comments.
-       │
-       └─ Nothing useful
-           └─ Write from your knowledge, note that you searched.
+6 trigger combinations:
+  verb + noun       "create a system", "write a parser"
+  standalone        "from scratch", "alternative to", "best way to"
+  verb + tech       "add oauth", "integrate stripe"
+  tech + noun       "telegram bot", "redis queue"
+  domain phrase     "drag and drop", "rate limiter", "dark mode"
+  verb + long       any create verb in a prompt > 60 chars
 ```
 
-## Context-aware search hints
+## Coverage
 
-The hook suggests WHERE to search based on category:
-- utility/tool → GitHub + npm/pip
-- integration → GitHub + official SDK
-- effect/animation → CodePen + ShaderToy + GitHub
-- automation → GitHub Actions
-- template → GitHub templates
+- 70+ create verbs (RU + EN, including slang)
+- 200+ object nouns across 15 categories
+- 30+ standalone trigger phrases
+- 300+ technology keywords (frameworks, databases, APIs, tools)
+- 25+ domain-specific phrases (web, devops, AI/ML, security)
+- Context-aware search hints (npm, pip, CodePen, Docker Hub, etc.)
 
-## Report
+## Skip patterns (no false positives)
 
-```
-🔍 Search: [what you searched for]
-  ├─ ✅ Found: [name] (⭐ N, link) → using it
-  ├─ ⚠️ Partial: [name] → using as base
-  └─ ❌ Nothing found → writing from scratch, references: [links]
-```
+Bug fixes, read-only questions, style edits, deletions, short answers,
+slash commands, workflow ops, file operations, process control.
 
-## Rules
+## Output
 
-- Ready-made = **ultimate priority** (not a "recommendation")
-- Don't search for: fixes, refactoring, styles, text, small edits
-- Search for: new features, utilities, integrations, services, effects, templates
-- Full criteria → `rule.md`
+Injects `[REUSE_FIRST]` via `injectedSystemPrompt` — Claude MUST search
+before writing code. Terminal hint via stderr for the user.

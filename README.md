@@ -1,15 +1,14 @@
 <div align="center">
 
-# 🔍 Reuse First
+# Reuse First
 
-**Search for existing solutions before writing code.**<br>
-Claude Code hook · 30+ triggers · bilingual (EN+RU) · context-aware hints
+**Stop reinventing the wheel. Search before you code.**
 
-<br>
+Claude Code hook that enforces searching for existing solutions before writing code from scratch.
 
-[![](https://img.shields.io/badge/v2.0.0-0099CC?style=flat-square)](https://github.com/elementalmasterpotap/reuse-first/releases)
-[![](https://img.shields.io/badge/Claude_Code-hook-B464FF?style=flat-square)](https://claude.ai/code)
-[![](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
+[![](https://img.shields.io/badge/v1.0.0-0099CC?style=flat-square)](https://github.com/elementalmasterpotap/reuse-first/releases)
+[![](https://img.shields.io/badge/Claude_Code-hook-B464FF?style=flat-square)](https://github.com/elementalmasterpotap/reuse-first)
+[![](https://img.shields.io/badge/Python-3.9+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![](https://img.shields.io/badge/license-MIT-22AA44?style=flat-square)](LICENSE)
 [![](https://img.shields.io/badge/Telegram-channel-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/potap_attic)
 
@@ -22,75 +21,35 @@ Claude Code hook · 30+ triggers · bilingual (EN+RU) · context-aware hints
 
 ## Why
 
-AI coding assistants jump straight to writing code. But often there's already a battle-tested library, a proven template, or a well-documented approach that does exactly what you need.
-
-**Reuse First** makes Claude Code search for existing solutions before writing anything from scratch. Ready-made implementations have **ultimate priority**.
+AI coding assistants happily write everything from scratch. But most things you ask for already exist as battle-tested libraries, tools, and templates. This hook makes Claude Code **search first, code second**.
 
 ## How it works
 
-```
-You type a prompt
-        │
-        ▼
-Hook analyzes your request (30+ regex patterns)
-        │
-        ├─ Matches "create parser", "build bot", "make CLI tool"...
-        │       │
-        │       ▼
-        │   [REUSE_FIRST] → search GitHub / npm / pip / CodePen first
-        │   Context hint: WHERE to search based on task category
-        │       │
-        │       ├─ Found ready-made (100+ ⭐) → USE IT
-        │       ├─ Found partial match → use as BASE
-        │       └─ Nothing found → search references → write based on them
-        │
-        ├─ Matches "fix bug", "refactor", "change color"...
-        │   └─ SKIP — no search needed, write immediately
-        │
-        └─ Short prompt / no match
-            └─ SKIP — pass through
-```
+A `UserPromptSubmit` hook analyzes every prompt. When it detects a task where existing solutions likely exist, it injects `[REUSE_FIRST]` into Claude's system prompt — forcing a web search before any code is written.
 
-## What's new in v2.0
+### 6 trigger combinations
 
-- **30+ trigger patterns** (was 10) across 17 categories
-- **Context-aware hints** — suggests WHERE to search (GitHub, npm, pip, CodePen, ShaderToy...)
-- **14 skip patterns** (was 8) — fewer false positives
-- **Bilingual** — English + Russian triggers in every category
-- **New categories**: data processing, testing, database/ORM, monitoring, auth, deployment, UI components
+| # | Combination | Example |
+|---|------------|---------|
+| 1 | **verb + noun** | "create a monitoring system" |
+| 2 | **standalone** | "from scratch", "alternative to X", "best way to" |
+| 3 | **verb + tech** | "add oauth", "integrate stripe" |
+| 4 | **tech + noun** | "telegram bot", "redis queue" |
+| 5 | **domain phrase** | "drag and drop", "rate limiter", "dark mode" |
+| 6 | **verb + long prompt** | any create verb in prompt > 60 chars |
 
-## Trigger categories
+### Coverage
 
-| Category | Example prompts | Search hint |
-|----------|----------------|-------------|
-| New implementation | "create a parser", "build an API" | GitHub |
-| Utility / tool | "script for converting", "validator" | GitHub + npm/pip |
-| Library / package | "SDK wrapper", "plugin for X" | npm/pip/crates |
-| Automation | "CI/CD pipeline", "cron scheduler" | GitHub Actions |
-| Bot / service | "telegram bot from scratch" | GitHub templates |
-| Template | "boilerplate for React app" | GitHub templates |
-| Effect / animation | "add parallax effect" | CodePen + ShaderToy |
-| Integration | "connect Stripe", "OAuth setup" | GitHub + official SDK |
-| CLI app | "command-line tool for..." | GitHub + npm |
-| Data processing | "CSV parser", "JSON converter" | npm/pip |
-| Testing | "test framework", "mock setup" | npm/pip |
-| Database / ORM | "migration tool", "query builder" | npm/pip + GitHub |
-| Monitoring | "logger", "metrics dashboard" | GitHub + npm/pip |
-| Auth | "JWT auth system", "RBAC" | GitHub + npm/pip |
-| Deployment | "Docker compose", "deploy script" | GitHub + Docker Hub |
-| UI component | "design system", "widget library" | npm + GitHub |
-| Best practices | "best way to handle X" | StackOverflow + docs |
+- **70+ create verbs** (EN + RU, including slang like "wire up", "spin up")
+- **200+ object nouns** across 15 categories (software, data, UI, infra, AI/ML...)
+- **30+ standalone triggers** ("from scratch", "how to build", "is there something like...")
+- **300+ technology keywords** (frameworks, databases, APIs, clouds, tools)
+- **25+ domain phrases** (web dev, devops, security, AI/ML patterns)
+- **Context-aware search hints** — tells Claude WHERE to search (npm, pip, CodePen, Docker Hub, GitHub Actions, etc.)
 
-## What does NOT trigger (write immediately)
+### Smart skip patterns
 
-- Bug fixes, patches (`fix`, `repair`, `patch`)
-- Small replacements (`change X to Y`)
-- Refactoring existing code
-- Style edits (CSS, colors, fonts)
-- Documentation, changelogs, commits
-- Read-only tasks (explain, show, find, list)
-- Deletions, file operations, process commands
-- Short answers, slash commands
+Won't trigger on: bug fixes, questions, style edits, deletions, short answers, slash commands, deploy/commit, file operations, process control, formatting.
 
 ## Install
 
@@ -100,14 +59,12 @@ cd reuse-first
 python install.py
 ```
 
-This copies 3 files to `~/.claude/` and registers the hook in `settings.json`:
+Installs 3 components:
+- `~/.claude/rules/reuse-first.md` — rule file
+- `~/.claude/scripts/reuse-first-check.py` — hook script
+- `~/.claude/skills/reuse-first/SKILL.md` — skill metadata
 
-```
-~/.claude/
-  ├── rules/reuse-first.md              ← decision tree + criteria
-  ├── scripts/reuse-first-check.py      ← UserPromptSubmit hook
-  └── skills/reuse-first/SKILL.md       ← knowledge skill
-```
+Registers hook in `~/.claude/settings.json` under `UserPromptSubmit`.
 
 ## Uninstall
 
@@ -115,22 +72,13 @@ This copies 3 files to `~/.claude/` and registers the hook in `settings.json`:
 python install.py --remove
 ```
 
-## Decision criteria
+## How Claude responds when triggered
 
 ```
-✅ Use ready-made:  100+ stars · active · README · MIT/Apache/BSD · 80%+ coverage
-⚠️ Use as base:     20-100 stars · clean code · 50-80% coverage
-❌ Write your own:   nothing found · outdated · overengineered · unique logic
-```
-
-## Report format
-
-When the hook triggers, Claude reports what it found:
-
-```
-🔍 Search: JWT authentication library python
-  ├─ ✅ Found: PyJWT (⭐ 5.2k) → using it
-  └─ References: jwt.io docs, OWASP auth guide
+🔍 Search: [task description]
+  ├─ ✅ Found: [name] (⭐ N, link) → using it
+  ├─ ⚠️ Partial: [name] → using as base
+  └─ ❌ Nothing found → writing from scratch
 ```
 
 </details>
@@ -140,75 +88,35 @@ When the hook triggers, Claude reports what it found:
 
 ## Зачем
 
-AI-ассистенты сразу прыгают в написание кода. Но часто уже есть проверенная библиотека, готовый шаблон или задокументированный подход который делает ровно то же самое.
-
-**Reuse First** заставляет Claude Code искать готовые решения перед написанием чего-либо с нуля. Готовые реализации имеют **ультимативный приоритет**.
+AI-ассистенты радостно пишут всё с нуля. Но большинство задач уже решены — есть готовые библиотеки, утилиты, шаблоны. Этот хук заставляет Claude Code **сначала искать, потом писать**.
 
 ## Как работает
 
-```
-Ты пишешь промпт
-        │
-        ▼
-Хук анализирует запрос (30+ regex паттернов)
-        │
-        ├─ Матчит "создай парсер", "сделай бота", "напиши CLI"...
-        │       │
-        │       ▼
-        │   [REUSE_FIRST] → сначала искать на GitHub / npm / pip / CodePen
-        │   Контекстная подсказка: ГДЕ искать по категории задачи
-        │       │
-        │       ├─ Нашёл готовое (100+ ⭐) → ИСПОЛЬЗОВАТЬ
-        │       ├─ Частичное совпадение → взять как БАЗУ
-        │       └─ Ничего нет → искать референсы → писать по ним
-        │
-        ├─ Матчит "исправь баг", "рефактор", "поменяй цвет"...
-        │   └─ ПРОПУСК — поиск не нужен, пишем сразу
-        │
-        └─ Короткий промпт / нет совпадения
-            └─ ПРОПУСК — проходит дальше
-```
+`UserPromptSubmit` хук анализирует каждый промпт. Когда видит задачу где скорее всего есть готовое решение — инжектирует `[REUSE_FIRST]` в системный промпт Claude, принуждая к веб-поиску до написания кода.
 
-## Что нового в v2.0
+### 6 триггерных комбинаций
 
-- **30+ триггерных паттернов** (было 10) в 17 категориях
-- **Контекстные подсказки** — говорит ГДЕ искать (GitHub, npm, pip, CodePen, ShaderToy...)
-- **14 skip-паттернов** (было 8) — меньше ложных срабатываний
-- **Двуязычные** — английские + русские триггеры в каждой категории
-- **Новые категории**: парсинг данных, тестирование, БД/ORM, мониторинг, авторизация, деплой, UI-компоненты
+| # | Комбинация | Пример |
+|---|-----------|--------|
+| 1 | **глагол + объект** | "создай систему мониторинга" |
+| 2 | **standalone** | "с нуля", "аналог для X", "лучший способ" |
+| 3 | **глагол + технология** | "добавь oauth", "прикрути stripe" |
+| 4 | **технология + объект** | "telegram бот", "redis очередь" |
+| 5 | **доменная фраза** | "drag and drop", "rate limiter", "dark mode" |
+| 6 | **глагол + длинный промпт** | любой глагол создания в промпте > 60 символов |
 
-## Категории триггеров
+### Покрытие
 
-| Категория | Примеры промптов | Где искать |
-|-----------|-----------------|------------|
-| Новая реализация | "создай парсер", "реализуй API" | GitHub |
-| Утилита / тул | "скрипт для конвертации", "валидатор" | GitHub + npm/pip |
-| Библиотека / пакет | "обёртка для SDK", "плагин для X" | npm/pip/crates |
-| Автоматизация | "CI/CD пайплайн", "планировщик задач" | GitHub Actions |
-| Бот / сервис | "telegram бот с нуля" | GitHub templates |
-| Шаблон | "стартер для React приложения" | GitHub templates |
-| Эффект / анимация | "добавь параллакс эффект" | CodePen + ShaderToy |
-| Интеграция | "подключить Stripe", "настроить OAuth" | GitHub + official SDK |
-| CLI приложение | "консольная утилита для..." | GitHub + npm |
-| Парсинг данных | "CSV парсер", "JSON конвертер" | npm/pip |
-| Тестирование | "тест-фреймворк", "настройка моков" | npm/pip |
-| БД / ORM | "инструмент миграций", "query builder" | npm/pip + GitHub |
-| Мониторинг | "логгер", "дашборд метрик" | GitHub + npm/pip |
-| Авторизация | "JWT система", "RBAC" | GitHub + npm/pip |
-| Деплой | "Docker compose", "деплой-скрипт" | GitHub + Docker Hub |
-| UI-компонент | "дизайн-система", "библиотека виджетов" | npm + GitHub |
-| Best practices | "лучший способ сделать X" | StackOverflow + docs |
+- **70+ глаголов создания** (RU + EN, включая сленг: "захуярь", "забацай", "склепай")
+- **200+ существительных** в 15 категориях (софт, данные, UI, инфра, AI/ML...)
+- **30+ standalone триггеров** ("с нуля", "как сделать", "есть что-то типа...")
+- **300+ технологий** (фреймворки, БД, API, облака, инструменты)
+- **25+ доменных фраз** (веб, devops, безопасность, AI/ML паттерны)
+- **Контекстные подсказки** — говорит Claude ГДЕ искать (npm, pip, CodePen, Docker Hub, GitHub Actions и т.д.)
 
-## Что НЕ триггерит (пишем сразу)
+### Умные исключения
 
-- Фиксы багов (`исправь`, `почини`, `поправь`)
-- Мелкие замены (`поменяй X на Y`)
-- Рефакторинг существующего кода
-- Стилевые правки (CSS, цвета, шрифты)
-- Документация, патчноты, коммиты
-- Read-only задачи (объясни, покажи, найди, перечисли)
-- Удаление, файловые операции, управление процессами
-- Короткие ответы, slash-команды
+Не триггерится на: фиксах багов, вопросах, стилевых правках, удалении, коротких ответах, слеш-командах, деплое/коммите, файловых операциях.
 
 ## Установка
 
@@ -218,14 +126,12 @@ cd reuse-first
 python install.py
 ```
 
-Копирует 3 файла в `~/.claude/` и регистрирует хук в `settings.json`:
+Устанавливает 3 компонента:
+- `~/.claude/rules/reuse-first.md` — правило
+- `~/.claude/scripts/reuse-first-check.py` — скрипт хука
+- `~/.claude/skills/reuse-first/SKILL.md` — метаданные скилла
 
-```
-~/.claude/
-  ├── rules/reuse-first.md              ← дерево решений + критерии
-  ├── scripts/reuse-first-check.py      ← UserPromptSubmit хук
-  └── skills/reuse-first/SKILL.md       ← knowledge скилл
-```
+Регистрирует хук в `~/.claude/settings.json` (секция `UserPromptSubmit`).
 
 ## Удаление
 
@@ -233,34 +139,13 @@ python install.py
 python install.py --remove
 ```
 
-## Критерии выбора
+## Как Claude отвечает при срабатывании
 
 ```
-✅ Использовать:  100+ stars · активное · README · MIT/Apache/BSD · 80%+ покрытие
-⚠️ Взять как базу: 20-100 stars · чистый код · 50-80% покрытие
-❌ Писать своё:    ничего нет · устарело · overengineered · уникальная логика
+🔍 Поиск: [описание задачи]
+  ├─ ✅ Найдено: [название] (⭐ N, ссылка) → использую
+  ├─ ⚠️ Частичное: [название] → беру как базу
+  └─ ❌ Не найдено → пишу с нуля
 ```
-
-## Формат отчёта
-
-Когда хук сработал, Claude отчитывается:
-
-```
-🔍 Поиск: JWT authentication library python
-  ├─ ✅ Найдено: PyJWT (⭐ 5.2k) → использую
-  └─ Референсы: jwt.io docs, OWASP auth guide
-```
-
-## Первый в своём роде
-
-Это первый open-source инструмент, который заставляет AI-ассистента искать готовые решения перед написанием кода. Мы проверили — аналогов на GitHub нет (март 2026).
 
 </details>
-
----
-
-<div align="center">
-
-Made by **Potap** · [@potap_attic](https://t.me/potap_attic)
-
-</div>
