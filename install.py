@@ -3,9 +3,11 @@
 Reuse First — installer for Claude Code.
 
 Installs:
-  1. Rule   → ~/.claude/rules/reuse-first.md
-  2. Hook   → ~/.claude/scripts/reuse-first-check.py + settings.json registration
-  3. Skill  → ~/.claude/skills/reuse-first/SKILL.md
+  1. Rule     → ~/.claude/rules/reuse-first.md
+  2. Hook     → ~/.claude/scripts/reuse-first-check.py (facade)
+  3. Patterns → ~/.claude/scripts/reuse_first_patterns.py (detection patterns)
+  4. Hints    → ~/.claude/scripts/reuse_first_hints.py (where_to_search)
+  5. Skill    → ~/.claude/skills/reuse-first/SKILL.md
 
 Usage:
   python install.py           # install everything
@@ -22,9 +24,11 @@ CLAUDE_DIR = Path.home() / ".claude"
 SRC_DIR = Path(__file__).parent / "src"
 
 TARGETS = {
-    "rule":  (SRC_DIR / "rule.md",     CLAUDE_DIR / "rules" / "reuse-first.md"),
-    "hook":  (SRC_DIR / "hook.py",     CLAUDE_DIR / "scripts" / "reuse-first-check.py"),
-    "skill": (SRC_DIR / "SKILL.md",    CLAUDE_DIR / "skills" / "reuse-first" / "SKILL.md"),
+    "rule":     (SRC_DIR / "rule.md",                    CLAUDE_DIR / "rules" / "reuse-first.md"),
+    "hook":     (SRC_DIR / "hook.py",                    CLAUDE_DIR / "scripts" / "reuse-first-check.py"),
+    "patterns": (SRC_DIR / "reuse_first_patterns.py",    CLAUDE_DIR / "scripts" / "reuse_first_patterns.py"),
+    "hints":    (SRC_DIR / "reuse_first_hints.py",       CLAUDE_DIR / "scripts" / "reuse_first_hints.py"),
+    "skill":    (SRC_DIR / "SKILL.md",                   CLAUDE_DIR / "skills" / "reuse-first" / "SKILL.md"),
 }
 
 HOOK_ENTRY = {
