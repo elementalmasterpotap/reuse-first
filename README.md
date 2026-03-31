@@ -75,12 +75,19 @@ cd reuse-first
 python install.py
 ```
 
-Installs 3 components:
+Installs 7 components:
 - `~/.claude/rules/reuse-first.md` — rule file
-- `~/.claude/scripts/reuse-first-check.py` — hook script
+- `~/.claude/scripts/reuse-first-check.py` — main hook (UserPromptSubmit)
+- `~/.claude/scripts/reuse-first-enforce.py` — blocker (PreToolUse on Write/Edit/Bash)
+- `~/.claude/scripts/reuse-first-search-track.py` — tracker (PostToolUse on WebSearch)
+- `~/.claude/scripts/reuse_first_patterns.py` — detection patterns (400+)
+- `~/.claude/scripts/reuse_first_hints.py` — where-to-search hints (60+)
 - `~/.claude/skills/reuse-first/SKILL.md` — skill metadata
 
-Registers hook in `~/.claude/settings.json` under `UserPromptSubmit`.
+Registers 3 hooks in `~/.claude/settings.json`:
+- `UserPromptSubmit` — detect task, inject search prompt
+- `PreToolUse` — block Write/Edit/Bash until WebSearch is done
+- `PostToolUse` — track WebSearch completion, unblock enforce
 
 ## Uninstall
 

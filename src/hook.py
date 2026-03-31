@@ -20,6 +20,16 @@ import sys
 # Добавляем директорию скрипта в PATH для импорта модулей
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# ── State файл для enforcement (PreToolUse хук проверяет) ─────────────
+REUSE_STATE_PATH = os.path.expanduser("~/.claude/reuse-first-state.json")
+
+def _write_reuse_state(data):
+    try:
+        with open(REUSE_STATE_PATH, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False)
+    except Exception:
+        pass
+
 from reuse_first_patterns import (
     SKIP_PATTERNS,
     CREATE_VERBS_RU, CREATE_VERBS_EN,
@@ -82,6 +92,13 @@ def main():
 
     if not reasons:
         return
+
+    # ── Write state for enforce hook ──────────────────────────────────
+    _write_reuse_state({
+        "reuse_required": True,
+        "prompt_preview": prompt[:80],
+        "reasons": reasons,
+    })
 
     # ── Output ─────────────────────────────────────────────────────────
     where_sources, where_queries = where_to_search(prompt_lower)
