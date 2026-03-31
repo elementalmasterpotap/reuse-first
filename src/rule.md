@@ -29,22 +29,28 @@ Task received → "can I find this ready-made?"
 
 ---
 
-## What to search for
+## Where to search
 
 ```
 Task type                         Where to search
 ───────────────────────────────────────────────────────────────
 CLI utility / tool                GitHub (stars, active)
-npm package / library             npmjs.com, GitHub
+npm package / JS library          npmjs.com, GitHub
 Python package                    PyPI, GitHub
 Claude Code extension             claude-code-plugins, GitHub
-Automation script                 GitHub, gists
+Automation / CI/CD                GitHub Actions marketplace
 Template / boilerplate            GitHub templates, cookiecutter
 UI component                      npm, CodePen, GitHub
 Algorithm / pattern               StackOverflow, docs, MDN
-DevOps / CI                       GitHub Actions marketplace
-Shader / effect                   ShaderToy, GitHub
+Shader / effect                   ShaderToy, CodePen, GitHub
 Telegram bot feature              GitHub, ptb examples
+Integration / API                 Official SDK → GitHub wrapper
+Monitoring / logging              GitHub, npm/pip
+Deployment / Docker               Docker Hub, GitHub
+Auth / security                   GitHub, npm/pip
+Data processing (CSV/JSON/XML)    npm/pip (pandas, cheerio)
+Testing                           npm/pip (pytest, jest)
+Database / ORM                    npm/pip + GitHub
 ```
 
 ---
@@ -73,18 +79,16 @@ Telegram bot feature              GitHub, ptb examples
 
 ---
 
-## Search algorithm (WebSearch queries)
+## Search algorithm (3 steps)
 
 ```
-Step 1 — Exact search:
+Step 1 — Direct search:
   "[task] github"
-  "[task] npm package"
-  "[task] python library"
+  "[task] npm package" / "pip install"
 
 Step 2 — If no ready-made, search references:
-  "[task] best practices"
-  "[task] tutorial 2025"
-  "[task] stackoverflow"
+  "[task] best practices 2025"
+  "[task] tutorial"
   "how to [task] [language/framework]"
 
 Step 3 — If references are scarce:
@@ -103,6 +107,10 @@ Step 3 — If references are scarce:
 · Style edits (CSS, colors, fonts)
 · Text / copywriting / changelogs
 · Project-specific business logic
+· Version bumps / updates
+· File operations (move, copy, delete)
+· Process commands (run, start, stop)
+· Slash commands / workflow operations
 ```
 
 ---

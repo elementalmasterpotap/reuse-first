@@ -9,7 +9,21 @@ user-invocable: false
 ## When loaded
 
 Automatically via `hook.py` (UserPromptSubmit).
-Injects `[REUSE_FIRST]` when task matches a pattern.
+Injects `[REUSE_FIRST]` + context-aware search hints when task matches a pattern.
+
+## What it detects
+
+30+ trigger patterns across 17 categories:
+- New implementations (create, build, implement, develop)
+- Utilities, libraries, integrations, templates
+- Bots, services, CLI apps, effects/animations
+- Data processing, testing, monitoring, auth
+- Database tools, deployment, UI components
+- Bilingual: English + Russian triggers
+
+14 skip patterns to avoid false positives:
+- Fixes, refactoring, style edits, docs, read-only tasks
+- Short answers, slash commands, process commands
 
 ## Algorithm
 
@@ -33,6 +47,15 @@ Injects `[REUSE_FIRST]` when task matches a pattern.
        └─ Nothing useful
            └─ Write from your knowledge, note that you searched.
 ```
+
+## Context-aware search hints
+
+The hook suggests WHERE to search based on category:
+- utility/tool → GitHub + npm/pip
+- integration → GitHub + official SDK
+- effect/animation → CodePen + ShaderToy + GitHub
+- automation → GitHub Actions
+- template → GitHub templates
 
 ## Report
 

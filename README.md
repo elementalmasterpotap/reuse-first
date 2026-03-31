@@ -2,102 +2,112 @@
 
 # 🔍 Reuse First
 
-**Stop reinventing the wheel. Search before you code.**<br>
-Auto-detection · WebSearch enforcement · Ready-made priority
+**Search for existing solutions before writing code.**<br>
+Claude Code hook · 30+ triggers · bilingual (EN+RU) · context-aware hints
 
 <br>
 
-[![](https://img.shields.io/badge/v1.0.0-0099CC?style=flat-square)](https://github.com/elementalmasterpotap/reuse-first/releases)
-[![](https://img.shields.io/badge/Claude_Code-hook-B8860B?style=flat-square)](https://claude.ai/code)
+[![](https://img.shields.io/badge/v2.0.0-0099CC?style=flat-square)](https://github.com/elementalmasterpotap/reuse-first/releases)
+[![](https://img.shields.io/badge/Claude_Code-hook-B464FF?style=flat-square)](https://claude.ai/code)
 [![](https://img.shields.io/badge/Python-3.8+-3776AB?style=flat-square&logo=python&logoColor=white)](https://python.org)
 [![](https://img.shields.io/badge/license-MIT-22AA44?style=flat-square)](LICENSE)
 [![](https://img.shields.io/badge/Telegram-channel-26A5E4?style=flat-square&logo=telegram&logoColor=white)](https://t.me/potap_attic)
 
-<br>
+</div>
+
+---
 
 <details>
 <summary>🇬🇧 English</summary>
 
-<br>
-
-**The first enforcement system that makes Claude Code search for existing solutions before writing code from scratch.**
-
-Every time you ask Claude to create something new — a utility, integration, bot, template — the hook automatically detects it and injects a `[REUSE_FIRST]` signal. Claude then searches the web for ready-made solutions before writing a single line of code.
-
 ## Why
 
-AI coding assistants are great at writing code. Too great. They'll happily write from scratch what already exists as a battle-tested library with 10k stars. This wastes your time and tokens — and produces inferior results.
+AI coding assistants jump straight to writing code. But often there's already a battle-tested library, a proven template, or a well-documented approach that does exactly what you need.
 
-**Reuse First** fixes this by enforcing a simple rule: **search first, code second.**
+**Reuse First** makes Claude Code search for existing solutions before writing anything from scratch. Ready-made implementations have **ultimate priority**.
 
 ## How it works
 
 ```
-You: "create a CLI tool for monitoring Docker containers"
-                    │
-          ┌─────────▼──────────┐
-          │  UserPromptSubmit   │
-          │  hook detects:      │
-          │  "create" + "tool"  │
-          └─────────┬──────────┘
-                    │
-        🔍 [REUSE_FIRST] injected
-                    │
-          ┌─────────▼──────────┐
-          │  Claude searches:   │
-          │  "docker monitor    │
-          │   CLI github"       │
-          └─────────┬──────────┘
-                    │
-      ┌─────────────┼─────────────┐
-      │             │             │
-  ✅ Found      ⚠️ Partial    ❌ Nothing
-  lazydocker    dry but old    found
-  (40k ⭐)      (200 ⭐)
-      │             │             │
-  USE IT        Adapt it      Search refs
-                              then write
+You type a prompt
+        │
+        ▼
+Hook analyzes your request (30+ regex patterns)
+        │
+        ├─ Matches "create parser", "build bot", "make CLI tool"...
+        │       │
+        │       ▼
+        │   [REUSE_FIRST] → search GitHub / npm / pip / CodePen first
+        │   Context hint: WHERE to search based on task category
+        │       │
+        │       ├─ Found ready-made (100+ ⭐) → USE IT
+        │       ├─ Found partial match → use as BASE
+        │       └─ Nothing found → search references → write based on them
+        │
+        ├─ Matches "fix bug", "refactor", "change color"...
+        │   └─ SKIP — no search needed, write immediately
+        │
+        └─ Short prompt / no match
+            └─ SKIP — pass through
 ```
 
-## What triggers the search
+## What's new in v2.0
 
-| Trigger | Examples |
-|---------|----------|
-| Creating something new | "create", "build", "implement", "make" |
-| Utilities & tools | "tool", "script", "parser", "converter" |
-| Libraries & packages | "library", "package", "module", "plugin" |
-| Automation | "automate", "workflow", "pipeline", "CI/CD" |
-| Integrations | "integrate", "connect", "webhook", "OAuth" |
-| Templates | "template", "boilerplate", "starter", "scaffold" |
-| Effects | "effect", "animation", "shader" |
-| CLI apps | "CLI", "command-line tool" |
+- **30+ trigger patterns** (was 10) across 17 categories
+- **Context-aware hints** — suggests WHERE to search (GitHub, npm, pip, CodePen, ShaderToy...)
+- **14 skip patterns** (was 8) — fewer false positives
+- **Bilingual** — English + Russian triggers in every category
+- **New categories**: data processing, testing, database/ORM, monitoring, auth, deployment, UI components
 
-**Bilingual** — triggers work in both English and Russian.
+## Trigger categories
+
+| Category | Example prompts | Search hint |
+|----------|----------------|-------------|
+| New implementation | "create a parser", "build an API" | GitHub |
+| Utility / tool | "script for converting", "validator" | GitHub + npm/pip |
+| Library / package | "SDK wrapper", "plugin for X" | npm/pip/crates |
+| Automation | "CI/CD pipeline", "cron scheduler" | GitHub Actions |
+| Bot / service | "telegram bot from scratch" | GitHub templates |
+| Template | "boilerplate for React app" | GitHub templates |
+| Effect / animation | "add parallax effect" | CodePen + ShaderToy |
+| Integration | "connect Stripe", "OAuth setup" | GitHub + official SDK |
+| CLI app | "command-line tool for..." | GitHub + npm |
+| Data processing | "CSV parser", "JSON converter" | npm/pip |
+| Testing | "test framework", "mock setup" | npm/pip |
+| Database / ORM | "migration tool", "query builder" | npm/pip + GitHub |
+| Monitoring | "logger", "metrics dashboard" | GitHub + npm/pip |
+| Auth | "JWT auth system", "RBAC" | GitHub + npm/pip |
+| Deployment | "Docker compose", "deploy script" | GitHub + Docker Hub |
+| UI component | "design system", "widget library" | npm + GitHub |
+| Best practices | "best way to handle X" | StackOverflow + docs |
 
 ## What does NOT trigger (write immediately)
 
-- Bug fixes, refactoring, style edits
-- Config changes, text/copywriting
-- Short answers, questions, read-only tasks
+- Bug fixes, patches (`fix`, `repair`, `patch`)
+- Small replacements (`change X to Y`)
+- Refactoring existing code
+- Style edits (CSS, colors, fonts)
+- Documentation, changelogs, commits
+- Read-only tasks (explain, show, find, list)
+- Deletions, file operations, process commands
+- Short answers, slash commands
 
 ## Install
 
 ```bash
-git clone https://github.com/elementalmasterpotap/reuse-first
+git clone https://github.com/elementalmasterpotap/reuse-first.git
 cd reuse-first
 python install.py
 ```
 
-Installs 3 components into `~/.claude/`:
+This copies 3 files to `~/.claude/` and registers the hook in `settings.json`:
 
 ```
 ~/.claude/
-├── rules/reuse-first.md              ← rule (decision tree)
-├── scripts/reuse-first-check.py      ← hook (auto-detection)
-└── skills/reuse-first/SKILL.md       ← skill (search algorithm)
+  ├── rules/reuse-first.md              ← decision tree + criteria
+  ├── scripts/reuse-first-check.py      ← UserPromptSubmit hook
+  └── skills/reuse-first/SKILL.md       ← knowledge skill
 ```
-
-Restart Claude Code after install.
 
 ## Uninstall
 
@@ -105,23 +115,22 @@ Restart Claude Code after install.
 python install.py --remove
 ```
 
-Removes all 3 components + hook registration from `settings.json`.
-
 ## Decision criteria
 
 ```
-✅ Use ready-made:  100+ ⭐, active, MIT/Apache/BSD, solves 80%+
-⚠️ Use as base:     20+ ⭐, clean code, covers 50-80%
-❌ Write your own:   nothing found / outdated / overengineered
+✅ Use ready-made:  100+ stars · active · README · MIT/Apache/BSD · 80%+ coverage
+⚠️ Use as base:     20-100 stars · clean code · 50-80% coverage
+❌ Write your own:   nothing found · outdated · overengineered · unique logic
 ```
 
 ## Report format
 
-After searching, Claude reports:
+When the hook triggers, Claude reports what it found:
+
 ```
-🔍 Search: docker monitoring CLI
-  ├─ ✅ Found: lazydocker (⭐ 40k) → using it
-  └─ No need to write from scratch
+🔍 Search: JWT authentication library python
+  ├─ ✅ Found: PyJWT (⭐ 5.2k) → using it
+  └─ References: jwt.io docs, OWASP auth guide
 ```
 
 </details>
@@ -129,87 +138,94 @@ After searching, Claude reports:
 <details open>
 <summary>🇷🇺 Русский</summary>
 
-<br>
-
-**Первая система принуждения, которая заставляет Claude Code искать готовые решения перед написанием кода с нуля.**
-
-Каждый раз когда просишь Claude создать что-то новое — утилиту, интеграцию, бота, шаблон — хук автоматически детектит это и инжектирует сигнал `[REUSE_FIRST]`. Claude ищет в сети готовые решения прежде чем написать хоть строчку кода.
-
 ## Зачем
 
-AI-ассистенты охуенно пишут код. Слишком охуенно. Они с удовольствием напишут с нуля то, что уже существует как проверенная библиотека с 10k звёзд. Это тратит время и токены — и даёт результат хуже.
+AI-ассистенты сразу прыгают в написание кода. Но часто уже есть проверенная библиотека, готовый шаблон или задокументированный подход который делает ровно то же самое.
 
-**Reuse First** чинит это простым правилом: **сначала ищи, потом пиши.**
+**Reuse First** заставляет Claude Code искать готовые решения перед написанием чего-либо с нуля. Готовые реализации имеют **ультимативный приоритет**.
 
 ## Как работает
 
 ```
-Ты: "создай CLI утилиту для мониторинга Docker контейнеров"
-                    │
-          ┌─────────▼──────────┐
-          │  UserPromptSubmit   │
-          │  хук детектит:      │
-          │  "создай" + "утилит"│
-          └─────────┬──────────┘
-                    │
-        🔍 [REUSE_FIRST] инжектирован
-                    │
-          ┌─────────▼──────────┐
-          │  Claude ищет:       │
-          │  "docker monitor    │
-          │   CLI github"       │
-          └─────────┬──────────┘
-                    │
-      ┌─────────────┼─────────────┐
-      │             │             │
-  ✅ Нашёл      ⚠️ Частичное   ❌ Ничего
-  lazydocker    dry но старый   не нашёл
-  (40k ⭐)      (200 ⭐)
-      │             │             │
-ИСПОЛЬЗОВАТЬ   Взять за основу  Искать
-                              референсы
-                              → писать
+Ты пишешь промпт
+        │
+        ▼
+Хук анализирует запрос (30+ regex паттернов)
+        │
+        ├─ Матчит "создай парсер", "сделай бота", "напиши CLI"...
+        │       │
+        │       ▼
+        │   [REUSE_FIRST] → сначала искать на GitHub / npm / pip / CodePen
+        │   Контекстная подсказка: ГДЕ искать по категории задачи
+        │       │
+        │       ├─ Нашёл готовое (100+ ⭐) → ИСПОЛЬЗОВАТЬ
+        │       ├─ Частичное совпадение → взять как БАЗУ
+        │       └─ Ничего нет → искать референсы → писать по ним
+        │
+        ├─ Матчит "исправь баг", "рефактор", "поменяй цвет"...
+        │   └─ ПРОПУСК — поиск не нужен, пишем сразу
+        │
+        └─ Короткий промпт / нет совпадения
+            └─ ПРОПУСК — проходит дальше
 ```
 
-## Что триггерит поиск
+## Что нового в v2.0
 
-| Триггер | Примеры |
-|---------|---------|
-| Создание нового | "создай", "напиши", "сделай", "реализуй" |
-| Утилиты и инструменты | "утилита", "скрипт", "парсер", "конвертер" |
-| Библиотеки и пакеты | "библиотека", "пакет", "модуль", "плагин" |
-| Автоматизация | "автоматизация", "workflow", "пайплайн" |
-| Интеграции | "интеграция", "подключить", "webhook" |
-| Шаблоны | "шаблон", "boilerplate", "стартер" |
-| Эффекты | "эффект", "анимация", "шейдер" |
-| CLI | "CLI", "консольное приложение" |
+- **30+ триггерных паттернов** (было 10) в 17 категориях
+- **Контекстные подсказки** — говорит ГДЕ искать (GitHub, npm, pip, CodePen, ShaderToy...)
+- **14 skip-паттернов** (было 8) — меньше ложных срабатываний
+- **Двуязычные** — английские + русские триггеры в каждой категории
+- **Новые категории**: парсинг данных, тестирование, БД/ORM, мониторинг, авторизация, деплой, UI-компоненты
 
-**Двуязычный** — триггеры работают на английском и русском.
+## Категории триггеров
 
-## Что НЕ триггерит (писать сразу)
+| Категория | Примеры промптов | Где искать |
+|-----------|-----------------|------------|
+| Новая реализация | "создай парсер", "реализуй API" | GitHub |
+| Утилита / тул | "скрипт для конвертации", "валидатор" | GitHub + npm/pip |
+| Библиотека / пакет | "обёртка для SDK", "плагин для X" | npm/pip/crates |
+| Автоматизация | "CI/CD пайплайн", "планировщик задач" | GitHub Actions |
+| Бот / сервис | "telegram бот с нуля" | GitHub templates |
+| Шаблон | "стартер для React приложения" | GitHub templates |
+| Эффект / анимация | "добавь параллакс эффект" | CodePen + ShaderToy |
+| Интеграция | "подключить Stripe", "настроить OAuth" | GitHub + official SDK |
+| CLI приложение | "консольная утилита для..." | GitHub + npm |
+| Парсинг данных | "CSV парсер", "JSON конвертер" | npm/pip |
+| Тестирование | "тест-фреймворк", "настройка моков" | npm/pip |
+| БД / ORM | "инструмент миграций", "query builder" | npm/pip + GitHub |
+| Мониторинг | "логгер", "дашборд метрик" | GitHub + npm/pip |
+| Авторизация | "JWT система", "RBAC" | GitHub + npm/pip |
+| Деплой | "Docker compose", "деплой-скрипт" | GitHub + Docker Hub |
+| UI-компонент | "дизайн-система", "библиотека виджетов" | npm + GitHub |
+| Best practices | "лучший способ сделать X" | StackOverflow + docs |
 
-- Баг-фиксы, рефакторинг, стилевые правки
-- Изменение конфига, тексты/копирайтинг
-- Короткие ответы, вопросы, read-only задачи
+## Что НЕ триггерит (пишем сразу)
+
+- Фиксы багов (`исправь`, `почини`, `поправь`)
+- Мелкие замены (`поменяй X на Y`)
+- Рефакторинг существующего кода
+- Стилевые правки (CSS, цвета, шрифты)
+- Документация, патчноты, коммиты
+- Read-only задачи (объясни, покажи, найди, перечисли)
+- Удаление, файловые операции, управление процессами
+- Короткие ответы, slash-команды
 
 ## Установка
 
 ```bash
-git clone https://github.com/elementalmasterpotap/reuse-first
+git clone https://github.com/elementalmasterpotap/reuse-first.git
 cd reuse-first
 python install.py
 ```
 
-Устанавливает 3 компонента в `~/.claude/`:
+Копирует 3 файла в `~/.claude/` и регистрирует хук в `settings.json`:
 
 ```
 ~/.claude/
-├── rules/reuse-first.md              ← правило (дерево решений)
-├── scripts/reuse-first-check.py      ← хук (автодетекция)
-└── skills/reuse-first/SKILL.md       ← скилл (алгоритм поиска)
+  ├── rules/reuse-first.md              ← дерево решений + критерии
+  ├── scripts/reuse-first-check.py      ← UserPromptSubmit хук
+  └── skills/reuse-first/SKILL.md       ← knowledge скилл
 ```
-
-Перезапусти Claude Code после установки.
 
 ## Удаление
 
@@ -217,29 +233,34 @@ python install.py
 python install.py --remove
 ```
 
-Удаляет все 3 компонента + регистрацию хука из `settings.json`.
-
 ## Критерии выбора
 
 ```
-✅ Использовать готовое:   100+ ⭐, активное, MIT/Apache/BSD, решает 80%+
-⚠️ Взять за основу:        20+ ⭐, чистый код, покрывает 50-80%
-❌ Писать своё:             ничего не нашёл / устарело / оверинжинирено
+✅ Использовать:  100+ stars · активное · README · MIT/Apache/BSD · 80%+ покрытие
+⚠️ Взять как базу: 20-100 stars · чистый код · 50-80% покрытие
+❌ Писать своё:    ничего нет · устарело · overengineered · уникальная логика
 ```
 
 ## Формат отчёта
 
-После поиска Claude отчитывается:
+Когда хук сработал, Claude отчитывается:
+
 ```
-🔍 Поиск: docker monitoring CLI
-  ├─ ✅ Нашёл: lazydocker (⭐ 40k) → использую
-  └─ Писать с нуля не нужно
+🔍 Поиск: JWT authentication library python
+  ├─ ✅ Найдено: PyJWT (⭐ 5.2k) → использую
+  └─ Референсы: jwt.io docs, OWASP auth guide
 ```
+
+## Первый в своём роде
+
+Это первый open-source инструмент, который заставляет AI-ассистента искать готовые решения перед написанием кода. Мы проверили — аналогов на GitHub нет (март 2026).
 
 </details>
 
 ---
 
-<sub>First-of-its-kind — no similar enforcement systems found in the Claude Code ecosystem (March 2026).</sub>
+<div align="center">
+
+Made by **Potap** · [@potap_attic](https://t.me/potap_attic)
 
 </div>
